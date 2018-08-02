@@ -18,8 +18,19 @@ Fish.prototype.map = (array, fn) => {
     return result;
 };
 
-Fish.prototype.reduce = (array, fn) => {
-
+Fish.prototype.reduce = (array, fn, initNum) => {
+    let acc;
+    if (initNum === undefined) 
+        acc = array[0];
+    else 
+        acc = initNum;
+    if (initNum === undefined)
+        for (let i = 1;i < array.length; i++)
+            acc = fn(acc, array[i]);
+    else
+        for (let value of array)
+            acc = fn(acc, value);
+    return [acc];
 };
 
 Fish.prototype.unless = (predicate, fn) => {
@@ -66,8 +77,7 @@ Fish.prototype.zip = (leftArr, rightArr, fn) => {
 Fish.prototype.unary = (fn) => fn.length === 1?fn:(arg) => fn(arg);
 
 Fish.prototype.once = (fn) => {
-    let flag = false,
-        _this = this;
+    let flag = false;
     return () => {
         if (flag)
             return undefined;
@@ -126,17 +136,13 @@ Fish.prototype.partical = (fn, ...particalArgs) => {
 };
 
 
-Fish.prototype.compose = (...fns) => {
-    
-};
+Fish.prototype.compose = (...fns) => value => Fish.prototype.reduce(fns.reverse(), (acc, fn) => fn(acc), value);
 
-Fish.prototype.pipe = () => {
-
-};
+Fish.prototype.pipe = (...fns) => value => Fish.prototype.reduce(fns, (acc, fn) => fn(acc), value);
 
 /**
  * Continer 函子
- * @param {*} val 
+ * @param {*} val
  */
 Fish.prototype.Continer = function (val) {
     this.value = val;
@@ -148,7 +154,7 @@ Fish.prototype.Continer.of = function (val) {
 
 /**
  * maybe 函子
- * @param {*} val 
+ * @param {*} val
  */
 Fish.prototype.Maybe = function (val) {
     this.value = val;
@@ -166,9 +172,17 @@ Fish.prototype.Maybe.prototype.map = function (fn) {
     return this.isNothing()?Fish.prototype.Maybe.of(null):Fish.prototype.Maybe.of(fn(this.value));
 };
 
+Fish.prototype.Maybe.prototype.join = function () {
+    return this.isNothing()?Fish.prototype.Maybe.of(null):this.value;
+};
+
+Fish.prototype.Maybe.prototype.chain = function (f) {
+    return this.map(f).join();
+};
+
 /**
  * Either 函子
- * @param {*} val 
+ * @param {*} val
  */
 Fish.prototype.Either = function (){};
 
@@ -196,16 +210,5 @@ Fish.prototype.Either.Nothing.prototype.map = function (fn) {
     return this;
 };
 
-/**
- * Monad 函子
- * @param {*} val 
- */
-Fish.prototype.Monad = function (val) {
-
-};
-
-
 const _ = new Fish();
 module.exports = _;
-
-console.log(_.Either.Nothing.of(1).map(a=>a + 1));
